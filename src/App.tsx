@@ -1,7 +1,5 @@
 // Dependencies
 import { useEffect, useState } from "react"
-import { v4 as uuid } from "uuid"
-import { loadData, saveData } from "./utils/local-storage"
 import { ToastContainer, toast } from 'react-toastify';
 
 // Types
@@ -16,58 +14,78 @@ import './App.css'
 
 const App = (): JSX.Element => {
 
-    const [ todos, setTodos ] = useState<TodoType[]>(loadData('todos'))
+    const [ todos, setTodos ] = useState<TodoType[]>([])
 
     useEffect(() => {
-        saveData('todos', todos)
-    }, [todos])
+        getTodos()
+    }, [])
 
-    const handleAddTodo = (title: string) => {
-        const newTodo: TodoType = {
-            id: uuid(),
-            title,
-            completed: false
+    const backendUrl: string = 'http://localhost:3000'
+
+    const getTodos = async () => {
+        try {
+            const res = await fetch(`${backendUrl}/api/todos`)
+            const todoList = await res.json()
+            setTodos(todoList)
+            console.log('getTodos: ', todoList)
+        } catch (error) {
+            setTodos([])
+            console.error('Error fetching todos', error)
+            toast.error('Error fetching todos')
         }
-        setTodos([...todos, newTodo])
-        toast.success("Todo added!");
     }
 
-    const handleCompleteTodo = (id: string) => {
-        const newTodos = todos.map(todo => {
-            if (todo.id === id) {
-                if (!todo.completed) {
-                    toast.success("Todo marked as completed!");
-                } else {
-                    toast.success("Todo marked as uncompleted!");
-                }
-                return {
-                    ...todo,
-                    completed: !todo.completed
-                }
-            }
-            return todo
+    const handleAddTodo = async (title: string) => {
+        const res = await fetch(`${backendUrl}/api/todos`, {
+            method: 'post',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: title,
+                completed: false
+            })
         })
-        setTodos(newTodos)
+        const todo = await res.json()
+        getTodos()
+        console.log(todo);
+        toast.success('Todo added!')
     }
 
-    const handleEditTodo = (id: string, title: string) => {
-        const newTodos = todos.map(todo => {
-            if (todo.id === id) {
-                return {
-                    ...todo,
-                    title
-                }
-            }
-            return todo
+    const handleCompleteTodo = async (id: string) => {
+        console.log('completing todo: ', id);
+        
+        const res = await fetch(`${backendUrl}/api/todos/completed/${id}`, {
+            method: 'PUT'
         })
-        setTodos(newTodos)
-        toast.success("Todo edited!");
+        const response = await res.json()
+        getTodos()
+        console.log(response);
+        toast.success('Todo completed status changed!')
     }
 
-    const handleDeleteTodo = (id: string) => {
-        const newTodos = todos.filter( todo => todo.id !== id  )
-        setTodos(newTodos)
-        toast.success("Todo deleted!");
+    const handleEditTodo = async (id: string, title: string) => {
+        console.log('updating todo');
+        
+        const res = await fetch(`${backendUrl}/api/todos/edit/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: title
+            })
+        })
+        const todo = await res.json()
+        getTodos()
+        console.log(todo);
+        toast.success('Todo edited!')
+    }
+
+    const handleDeleteTodo = async (id: string) => {
+        const res = await fetch(`${backendUrl}/api/todos/${id}`, {
+            method: 'DELETE'
+        })
+        const response = await res.json()
+        getTodos()
+        console.log(response);
+        toast.success('Todo deleted!')
     }
 
     return (
@@ -85,7 +103,7 @@ const App = (): JSX.Element => {
             </main>
             <ToastContainer
                 position="bottom-right"
-                autoClose={5000}
+                autoClose={2000}
                 hideProgressBar={false}
                 newestOnTop={false}
                 closeOnClick
@@ -93,6 +111,7 @@ const App = (): JSX.Element => {
                 pauseOnFocusLoss
                 draggable
                 pauseOnHover
+                stacked
                 theme="light"
             />
         </div>

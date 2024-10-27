@@ -38,6 +38,7 @@ const Todo: React.FC<TodoProps> = ({ id, title, completed, onCompleteTodo, onEdi
                             onKeyDown={ (e) => { if (e.key === 'Enter') {
                                 onEditTodo(id, newTitle)
                                 setEditState(false)
+                                setNewTitle(title)
                             }}}
                         />
                         <button
@@ -73,7 +74,10 @@ const Todo: React.FC<TodoProps> = ({ id, title, completed, onCompleteTodo, onEdi
                         </span>
                         <button
                             className="btn btn-warning"
-                            onClick={ () => setEditState(true) }
+                            onClick={ () => {
+                                setNewTitle(title)
+                                setEditState(true)
+                            }}
                         >
                             <FaEdit />
                         </button>

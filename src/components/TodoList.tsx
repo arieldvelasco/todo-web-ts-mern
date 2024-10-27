@@ -15,10 +15,10 @@ const TodoList: React.FC<TodoListProps> = ({ todos, onCompleteTodo, onEditTodo, 
     return (
         <section>
             {
-                todos.map(todo => (
+                todos?.map(todo => (
                     <Todo
-                        key={ todo.id }
-                        id={ todo.id }
+                        key={ todo._id }
+                        id={ todo._id }
                         title={ todo.title }
                         completed={ todo.completed }
                         onCompleteTodo={ onCompleteTodo }
